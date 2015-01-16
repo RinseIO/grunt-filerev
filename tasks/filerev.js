@@ -9,11 +9,13 @@ module.exports = function (grunt) {
   grunt.registerMultiTask('filerev', 'File revisioning based on content hashing', function () {
     var options = this.options({
       algorithm: 'md5',
+      source: 'file',
       length: 8
     });
     var target = this.target;
     var filerev = grunt.filerev || {summary: {}};
 
+    var now = new Date();
     eachAsync(this.files, function (el, i, next) {
       var move = true;
 
@@ -43,7 +45,13 @@ module.exports = function (grunt) {
         }
 
         var dirname;
-        var hash = crypto.createHash(options.algorithm).update(fs.readFileSync(file)).digest('hex');
+        var hash;
+        if (options.source === 'date') {
+          hash = crypto.createHash(options.algorithm).update(now.toJSON()).digest('hex');
+        }
+        else {
+          crypto.createHash(options.algorithm).update(fs.readFileSync(file)).digest('hex');
+        }
         var suffix = hash.slice(0, options.length);
         var ext = path.extname(file);
         var newName = [path.basename(file, ext), suffix, ext.slice(1)].join('.');
